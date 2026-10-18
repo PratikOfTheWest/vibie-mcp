@@ -6,7 +6,7 @@ We welcome contributions to make **Vibie** the definitive AI video editor MCP fo
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/<your-username>/vibie-mcp.git
+   git clone https://github.com/PratikOfTheWest/vibie-mcp.git
    cd vibie-mcp
    ```
 
