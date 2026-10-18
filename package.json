@@ -1,6 +1,6 @@
 {
-  "name": "vibie-mcp",
-  "version": "1.0.0",
+  "name": "@pratikofthewest/vibie-mcp",
+  "version": "1.0.1",
   "description": "Vibie: The AI Vibe Video Editor MCP Server for FilmCraft, FFmpeg, OpenCV, and HyperFrames",
   "main": "dist/index.js",
   "type": "module",

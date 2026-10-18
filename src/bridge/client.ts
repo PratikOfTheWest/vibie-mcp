@@ -1,5 +1,19 @@
 import * as net from "node:net";
+import { exec } from "node:child_process";
 import type { FilmCraftRequest, FilmCraftResponse } from "./types.js";
+
+export async function checkFilmCraftProcessRunning(): Promise<boolean> {
+  return new Promise((resolve) => {
+    const cmd =
+      process.platform === "win32"
+        ? 'tasklist /FI "IMAGENAME eq filmcraft.exe"'
+        : "pgrep -x filmcraft";
+    exec(cmd, (err, stdout) => {
+      if (err) return resolve(false);
+      resolve(stdout.toLowerCase().includes("filmcraft"));
+    });
+  });
+}
 
 /**
  * Robust JSON-Lines TCP Bridge to FilmCraft (127.0.0.1:9876)
@@ -113,12 +127,20 @@ export class FilmCraftClient {
     return this.sendRequest<T>("engine.execute", { command, params }, timeoutMs);
   }
 
+  public async getDiagnosticMessage(): Promise<string> {
+    const running = await checkFilmCraftProcessRunning();
+    if (running) {
+      return "⚠️ FilmCraft is OPEN, but was started without AI Control Mode. Please close FilmCraft and relaunch it using 'launch-control.bat' (or run: filmcraft --control 9876) so AI agents can control it.";
+    }
+    return "FilmCraft is not running. Please launch it using 'launch-control.bat' or run: filmcraft --control 9876.";
+  }
+
   public async inspect<T = unknown>(
-    target = "activeSequence",
-    params: Record<string, unknown> = {},
+    _target = "activeSequence",
+    _params: Record<string, unknown> = {},
     timeoutMs = 10000
   ): Promise<T> {
-    return this.sendRequest<T>("engine.inspect", { target, ...params }, timeoutMs);
+    return this.sendRequest<T>("ui.inspect", {}, timeoutMs);
   }
 
   public async captureScreenshot(path = "program_frame.png", timeoutMs = 10000): Promise<string> {
@@ -131,10 +153,16 @@ export class FilmCraftClient {
     params?: Record<string, unknown>,
     timeoutMs = 15000
   ): Promise<T> {
-    await this.connect();
+    try {
+      await this.connect();
+    } catch {
+      const diag = await this.getDiagnosticMessage();
+      throw new Error(diag);
+    }
 
     if (!this.socket || this.socket.destroyed) {
-      throw new Error(`Cannot connect to FilmCraft control server on ${this.host}:${this.port}. Ensure FilmCraft is running with '--control 9876'.`);
+      const diag = await this.getDiagnosticMessage();
+      throw new Error(diag);
     }
 
     const id = this.nextId++;
