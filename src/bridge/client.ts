@@ -136,11 +136,34 @@ export class FilmCraftClient {
   }
 
   public async inspect<T = unknown>(
-    _target = "activeSequence",
-    _params: Record<string, unknown> = {},
+    target = "activeSequence",
+    params: Record<string, unknown> = {},
     timeoutMs = 10000
   ): Promise<T> {
-    return this.sendRequest<T>("ui.inspect", {}, timeoutMs);
+    if (target === "project" || target === "projectPanel") {
+      return this.sendRequest<T>("engine.execute", { command: "project.inspect", params: {} }, timeoutMs);
+    }
+
+    if (target === "ui" || target === "window") {
+      return this.sendRequest<T>("ui.inspect", {}, timeoutMs);
+    }
+
+    try {
+      const sequenceData = await this.sendRequest<any>("engine.execute", { command: "sequence.inspect", params }, timeoutMs);
+      try {
+        const uiData = await this.sendRequest<any>("ui.inspect", {}, 3000);
+        return {
+          ...sequenceData,
+          fps: uiData.fps,
+          playhead: uiData.playhead,
+          playback: uiData.playback,
+        } as T;
+      } catch {
+        return sequenceData as T;
+      }
+    } catch {
+      return this.sendRequest<T>("ui.inspect", {}, timeoutMs);
+    }
   }
 
   public async captureScreenshot(path = "program_frame.png", timeoutMs = 10000): Promise<string> {

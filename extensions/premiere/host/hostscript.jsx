@@ -17,7 +17,9 @@ $._vibie.dispatch = function(command, paramsJson) {
     }
   }
 
-  if (command === "engine.inspect" || command === "sequence.inspect") {
+  if (command === "project.inspect") {
+    return $._vibie.inspectProject();
+  } else if (command === "engine.inspect" || command === "sequence.inspect") {
     return $._vibie.inspectSequence();
   } else if (command === "sequence.addEdit") {
     return $._vibie.addEdit(params.seconds);
@@ -112,3 +114,25 @@ $._vibie.importMedia = function(filePaths) {
   var success = app.project.importFiles(filePaths, true, app.project.rootItem, false);
   return JSON.stringify({ ok: success, importedCount: filePaths.length });
 };
+
+$._vibie.inspectProject = function() {
+  if (!app.project) {
+    return JSON.stringify({ name: "Untitled", root: { children: [] } });
+  }
+  var root = app.project.rootItem;
+  var items = [];
+  if (root && root.children) {
+    for (var i = 0; i < root.children.numItems; i++) {
+      var item = root.children[i];
+      items.push({
+        name: item.name,
+        type: item.type === 1 ? "bin" : "clip"
+      });
+    }
+  }
+  return JSON.stringify({
+    name: app.project.name || "Premiere Project",
+    root: { name: app.project.name, children: items }
+  });
+};
+

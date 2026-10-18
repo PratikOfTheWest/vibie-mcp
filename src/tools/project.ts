@@ -79,4 +79,42 @@ export function registerProjectTools(
       }
     );
   }
+
+  if (isToolInPack("filmcraft_inspect_project", activePack)) {
+    server.tool(
+      "filmcraft_inspect_project",
+      "Inspects the active FilmCraft or Premiere Pro project, returning the project name, bins, imported media clips, durations, and active sequence.",
+      {},
+      async () => {
+        try {
+          const overview = await client.inspect("project");
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(overview, null, 2),
+              },
+            ],
+          };
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(
+                  {
+                    status: "fallback",
+                    message: `Could not inspect live project: ${msg}`,
+                  },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        }
+      }
+    );
+  }
 }

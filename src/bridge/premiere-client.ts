@@ -75,6 +75,9 @@ export class PremiereClient {
   }
 
   public async inspect<T = unknown>(target = "activeSequence"): Promise<T> {
+    if (target === "project" || target === "projectPanel") {
+      return this.executeCommand<T>("project.inspect", {});
+    }
     return this.executeCommand<T>("sequence.inspect", { target });
   }
 }

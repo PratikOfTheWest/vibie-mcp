@@ -13,12 +13,20 @@ export function registerLiveResources(server: McpServer, client: NleClient): voi
           contents: [
             {
               uri: uri.href,
-              text: JSON.stringify(state, null, 2),
+              text: JSON.stringify(
+                {
+                  status: "online",
+                  timeline: state,
+                },
+                null,
+                2
+              ),
               mimeType: "application/json",
             },
           ],
         };
-      } catch {
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
         return {
           contents: [
             {
@@ -26,7 +34,8 @@ export function registerLiveResources(server: McpServer, client: NleClient): voi
               text: JSON.stringify(
                 {
                   status: "offline",
-                  note: "FilmCraft desktop control server not connected on 127.0.0.1:9876",
+                  error: msg,
+                  note: "Start FilmCraft with 'filmcraft --control 9876' or start Adobe Premiere Pro to stream live timeline data",
                 },
                 null,
                 2
@@ -45,17 +54,28 @@ export function registerLiveResources(server: McpServer, client: NleClient): voi
     "filmcraft://project/overview",
     async (uri) => {
       try {
-        const overview = await client.inspect("project");
+        const overview = (await client.inspect("project")) as any;
         return {
           contents: [
             {
               uri: uri.href,
-              text: JSON.stringify(overview, null, 2),
+              text: JSON.stringify(
+                {
+                  status: "online",
+                  projectName: overview?.name || overview?.projectName || "Active Project",
+                  activeSequence: overview?.activeSequence,
+                  root: overview?.root,
+                  raw: overview,
+                },
+                null,
+                2
+              ),
               mimeType: "application/json",
             },
           ],
         };
-      } catch {
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
         return {
           contents: [
             {
@@ -63,7 +83,8 @@ export function registerLiveResources(server: McpServer, client: NleClient): voi
               text: JSON.stringify(
                 {
                   status: "offline",
-                  note: "Start FilmCraft with 'filmcraft --control 9876' to stream live project data",
+                  error: msg,
+                  note: "Start FilmCraft with 'filmcraft --control 9876' or start Adobe Premiere Pro to stream live project data",
                 },
                 null,
                 2
