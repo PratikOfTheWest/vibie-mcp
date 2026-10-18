@@ -1,15 +1,16 @@
 <div align="center">
 
 # 🎬 Vibie MCP
-### The AI "Vibe Video Editor" MCP for FilmCraft & Open-Source Post-Production
+### The Universal AI "Vibe Video Editor" MCP for FilmCraft & Adobe Premiere Pro
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-20%2B-green.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
 [![MCP](https://img.shields.io/badge/MCP-Server-orange.svg)](https://modelcontextprotocol.io/)
 [![FilmCraft](https://img.shields.io/badge/Compatible%20with-FilmCraft-8b5cf6.svg)](https://github.com/storytold/filmcraft)
+[![Adobe Premiere Pro](https://img.shields.io/badge/Compatible%20with-Adobe%20Premiere%20Pro-9999ff.svg)](https://www.adobe.com/products/premiere.html)
 
-**Vibie** is a next-generation Model Context Protocol (MCP) server that transforms **[FilmCraft](https://github.com/storytold/filmcraft)** (the open-source Premiere Pro reimplementation in pure Rust) into an autonomous, AI-driven **vibe video editor**.
+**Vibie** is a next-generation Model Context Protocol (MCP) server that empowers AI assistants to edit video natively across **[FilmCraft](https://github.com/storytold/filmcraft)** (the open-source Premiere Pro clone in pure Rust) AND **Adobe Premiere Pro** (via an included 1-click CEP panel extension).
 
 Powered by **TypeScript**, **FFmpeg**, **OpenCV**, and **HyperFrames (HeyGen)**.
 
@@ -22,6 +23,7 @@ Powered by **TypeScript**, **FFmpeg**, **OpenCV**, and **HyperFrames (HeyGen)**.
 Traditional video editing involves hours of repetitive friction: cutting dead air, syncing audio, hunting down clips, reframing 16:9 shots to 9:16 vertical reels, and building lower thirds. 
 
 **Vibie bridges human taste with agentic execution:**
+- 🔄 **Dual-Engine Interoperability**: Seamlessly controls **FilmCraft** (native 127.0.0.1:9876 socket) OR **Adobe Premiere Pro** (included CEP panel on 127.0.0.1:9877). Auto-detects whichever NLE is running!
 - 🏎️ **Fast Assembly**: Remove silences and generate rough cuts in seconds with FFmpeg.
 - 🎯 **AI Object Masking**: Select subjects and generate organic polygon contours via OpenCV even before native AI masks land in FilmCraft.
 - 📱 **Smart 9:16 Auto-Reframe**: Smoothly pan-and-scan horizontal footage for TikTok and YouTube Shorts by tracking faces.
@@ -41,6 +43,7 @@ flowchart TD
     end
 
     subgraph Vibie["Vibie MCP Server (TypeScript Host)"]
+        Router["Unified Bridge & Host Auto-Detector"]
         Packs["Tool Packs (Essential, Editorial, Audio, Color, Vision, Full)"]
         
         subgraph Intelligence["Open-Source Processing Engines"]
@@ -50,17 +53,24 @@ flowchart TD
         end
     end
 
-    subgraph FilmCraft["FilmCraft Engine (Local Rust NLE)"]
-        Socket["TCP Loopback (127.0.0.1:9876)"]
-        Timeline["Timeline Engine (Exact Integer Ticks)"]
-        Mixer["Essential Sound & Mixer Graph"]
-        Lumetri["Lumetri Color Processor"]
+    subgraph Hosts["Connected NLE Video Editors"]
+        subgraph FilmCraftApp["FilmCraft (Free & Open Source)"]
+            FCSocket["Native TCP Loopback (127.0.0.1:9876)"]
+            FCTimeline["Timeline Engine (Exact Integer Ticks)"]
+        end
+        
+        subgraph PremiereApp["Adobe Premiere Pro"]
+            CEPExt["Vibie CEP Extension Panel (127.0.0.1:9877)"]
+            PPRODOM["Premiere Pro ExtendScript DOM Engine"]
+        end
     end
 
     Client <--> Vibie
     Vibie <--> FFmpeg & OpenCV & Hyper
-    Vibie <-->|JSON-Lines over TCP| Socket
-    Socket <--> Timeline & Mixer & Lumetri
+    Router -->|Auto-Route| FCSocket
+    Router -->|Auto-Route| CEPExt
+    FCSocket <--> FCTimeline
+    CEPExt <--> PPRODOM
 ```
 
 ---
@@ -69,6 +79,8 @@ flowchart TD
 
 | Domain | Tool Name | Description |
 | :--- | :--- | :--- |
+| **Host Control** | `vibie_detect_hosts` | Detects whether FilmCraft, Adobe Premiere Pro, or both are online. |
+| | `vibie_set_target_host` | Switch active editing destination between `filmcraft`, `premiere`, or `auto`. |
 | **Inspection** | `filmcraft_inspect_timeline` | Deep scan of active sequence, tracks, clips, and playhead. |
 | | `filmcraft_capture_frame` | Grab the Program Monitor frame for visual AI inspection. |
 | | `filmcraft_add_marker` | Add timestamped editorial feedback notes and colored markers. |
@@ -95,20 +107,25 @@ flowchart TD
 
 ### 1. Requirements
 * **Node.js** v20+
-* **FilmCraft** installed and running with `--control 9876`:
-  ```bash
-  filmcraft --control 9876
-  ```
 
-### 2. Installation
+### 2. Connect Your Editor
+
+#### For FilmCraft (Free & Open Source):
+Run FilmCraft with the control flag:
 ```bash
-git clone https://github.com/<your-username>/vibie-mcp.git
-cd vibie-mcp
-npm install
-npm run build
+# Windows: Double-click extensions/filmcraft/launch-control.bat or run:
+filmcraft --control 9876
 ```
 
-### 3. Add to Claude Desktop (`claude_desktop_config.json`)
+#### For Adobe Premiere Pro:
+Install the included 1-click CEP panel:
+* **Windows**: Double-click `extensions/premiere/install-premiere.bat`
+* **macOS**: Run `bash extensions/premiere/install-premiere.sh`
+* Then launch Premiere Pro and open: **Window > Extensions > Vibie MCP Bridge**.
+
+---
+
+### 3. Setup in Claude Desktop (`claude_desktop_config.json`)
 
 ```json
 {
@@ -117,8 +134,7 @@ npm run build
       "command": "node",
       "args": ["d:/MCP Vibie/dist/index.js"],
       "env": {
-        "FILMCRAFT_HOST": "127.0.0.1",
-        "FILMCRAFT_PORT": "9876",
+        "VIBIE_TARGET": "auto",
         "VIBIE_PACK": "full"
       }
     }
@@ -126,7 +142,7 @@ npm run build
 }
 ```
 
-### 4. Add to Cursor (`.cursor/mcp.json`)
+### 4. Setup in Cursor (`.cursor/mcp.json`)
 
 ```json
 {
@@ -154,4 +170,4 @@ Vibie includes guided prompts out of the box:
 
 Vibie is 100% open-source under the **MIT License**. Contributions, issues, and feature requests are welcome!
 
-Made with ❤️ for the **FilmCraft** and **ArtCraft** creative community.
+Made with ❤️ for both the **FilmCraft** open-source community and the global **Premiere Pro** editorial community.

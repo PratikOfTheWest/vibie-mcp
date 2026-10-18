@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Vibie MCP Bridge</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #1e1e24;
+      color: #f4f4f5;
+      font-size: 13px;
+      user-select: none;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #2e2e38;
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+    }
+    .title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #a855f7;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #22c55e;
+      color: #052e16;
+      font-weight: 700;
+    }
+    .card {
+      background: #262630;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      border: 1px solid #323240;
+    }
+    .label {
+      color: #71717a;
+      font-size: 11px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .value {
+      font-family: monospace;
+      font-size: 12px;
+      color: #e4e4e7;
+    }
+    .log-box {
+      height: 100px;
+      background: #141418;
+      border-radius: 6px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #a1a1aa;
+      overflow-y: auto;
+      border: 1px solid #272730;
+    }
+    .log-item {
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">🎬 Vibie Bridge</div>
+    <div class="badge" id="statusBadge">ONLINE</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Local Port</div>
+    <div class="value">127.0.0.1:9877 (HTTP)</div>
+  </div>
+
+  <div class="card">
+    <div class="label">Connected NLE</div>
+    <div class="value">Adobe Premiere Pro</div>
+  </div>
+
+  <div class="label">Activity Feed</div>
+  <div class="log-box" id="logBox">
+    <div class="log-item">[Ready] Waiting for Vibie MCP commands...</div>
+  </div>
+
+  <script src="./CSInterface.js"></script>
+  <script src="./bridge.js"></script>
+  <script>
+    const logBox = document.getElementById("logBox");
+    function addLog(msg) {
+      const el = document.createElement("div");
+      el.className = "log-item";
+      el.textContent = "[" + new Date().toLocaleTimeString() + "] " + msg;
+      logBox.appendChild(el);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    try {
+      startBridge(addLog);
+      addLog("Bridge listening on 127.0.0.1:9877");
+    } catch (e) {
+      addLog("Error starting bridge: " + e.message);
+    }
+  </script>
+</body>
+</html>

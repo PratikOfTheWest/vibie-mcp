@@ -1,13 +1,13 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { FilmCraftClient } from "../bridge/client.js";
+import type { NleClient } from "../bridge/types.js";
 import { isToolInPack, type ToolPackName } from "./packs.js";
 import { ReceiptManager } from "../workflows/receipts.js";
 import { FFmpegEngine } from "../sidecars/ffmpeg.js";
 
 export function registerTimelineTools(
   server: McpServer,
-  client: FilmCraftClient,
+  client: NleClient,
   activePack: ToolPackName = "full"
 ): void {
   if (isToolInPack("filmcraft_place_clip", activePack)) {

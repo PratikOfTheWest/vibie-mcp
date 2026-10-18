@@ -1,13 +1,13 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { FilmCraftClient } from "../bridge/client.js";
+import type { NleClient } from "../bridge/types.js";
 import { isToolInPack, type ToolPackName } from "./packs.js";
 import { ReceiptManager } from "../workflows/receipts.js";
 import { VisionEngine } from "../sidecars/vision.js";
 
 export function registerVisionTools(
   server: McpServer,
-  client: FilmCraftClient,
+  client: NleClient,
   activePack: ToolPackName = "full"
 ): void {
   if (isToolInPack("filmcraft_object_select_mask", activePack)) {

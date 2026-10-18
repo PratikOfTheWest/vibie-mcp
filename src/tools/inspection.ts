@@ -2,13 +2,63 @@ import { z } from "zod";
 import * as fs from "node:fs";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { FilmCraftClient } from "../bridge/client.js";
+import type { UnifiedBridge } from "../bridge/unified-bridge.js";
 import { isToolInPack, type ToolPackName } from "./packs.js";
 
 export function registerInspectionTools(
   server: McpServer,
-  client: FilmCraftClient,
+  client: FilmCraftClient | UnifiedBridge,
   activePack: ToolPackName = "full"
 ): void {
+  server.tool(
+    "vibie_detect_hosts",
+    "Detects which video editors (FilmCraft, Adobe Premiere Pro, or both) are currently online and reachable.",
+    {},
+    async () => {
+      if ("detectHosts" in client) {
+        const hosts = await (client as UnifiedBridge).detectHosts();
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  detectedHosts: hosts,
+                  activeTarget: hosts.activeTarget,
+                  filmcraftStatus: hosts.filmcraft ? "Online (127.0.0.1:9876)" : "Offline",
+                  premiereStatus: hosts.premiere ? "Online (127.0.0.1:9877)" : "Offline",
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      }
+      return {
+        content: [{ type: "text", text: JSON.stringify({ activeTarget: "filmcraft" }, null, 2) }],
+      };
+    }
+  );
+
+  server.tool(
+    "vibie_set_target_host",
+    "Switches which video editor receives edits (FilmCraft or Adobe Premiere Pro).",
+    {
+      target: z.enum(["auto", "filmcraft", "premiere"]).describe("Target NLE: 'filmcraft', 'premiere', or 'auto' (whichever is open)"),
+    },
+    async ({ target }) => {
+      if ("setPreferredTarget" in client) {
+        (client as UnifiedBridge).setPreferredTarget(target);
+        return {
+          content: [{ type: "text", text: `Active target host set to: ${target}` }],
+        };
+      }
+      return {
+        content: [{ type: "text", text: `Target set to: ${target}` }],
+      };
+    }
+  );
   if (isToolInPack("filmcraft_inspect_timeline", activePack)) {
     server.tool(
       "filmcraft_inspect_timeline",

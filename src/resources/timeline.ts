@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { FilmCraftClient } from "../bridge/client.js";
+import type { NleClient } from "../bridge/types.js";
 
-export function registerLiveResources(server: McpServer, client: FilmCraftClient): void {
+export function registerLiveResources(server: McpServer, client: NleClient): void {
   // Live Timeline Resource
   server.resource(
     "filmcraft_timeline_active",

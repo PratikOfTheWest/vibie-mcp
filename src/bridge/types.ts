@@ -15,6 +15,12 @@ export interface FilmCraftResponse<T = unknown> {
   error?: string;
 }
 
+export interface NleClient {
+  executeCommand<T = unknown>(command: string, params?: Record<string, unknown>): Promise<T>;
+  inspect<T = unknown>(target?: string, params?: Record<string, unknown>): Promise<T>;
+  captureScreenshot?(path?: string): Promise<string>;
+}
+
 export interface TimelineClip {
   id: number;
   name: string;

@@ -1,5 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { FilmCraftClient } from "./bridge/client.js";
+import { UnifiedBridge, type NleHost } from "./bridge/unified-bridge.js";
 import { type ToolPackName } from "./tools/packs.js";
 import { registerProjectTools } from "./tools/project.js";
 import { registerTimelineTools } from "./tools/timeline.js";
@@ -13,20 +13,27 @@ import { registerLiveResources } from "./resources/timeline.js";
 import { registerWorkflowPrompts } from "./workflows/prompts.js";
 
 export interface ServerConfig {
-  host?: string;
-  port?: number;
+  filmcraftHost?: string;
+  filmcraftPort?: number;
+  premiereHost?: string;
+  premierePort?: number;
+  target?: NleHost;
   pack?: ToolPackName;
 }
 
 export function createVibieServer(config: ServerConfig = {}): {
   server: McpServer;
-  client: FilmCraftClient;
+  bridge: UnifiedBridge;
 } {
-  const host = config.host || process.env.FILMCRAFT_HOST || "127.0.0.1";
-  const port = config.port || Number(process.env.FILMCRAFT_PORT) || 9876;
+  const fcHost = config.filmcraftHost || process.env.FILMCRAFT_HOST || "127.0.0.1";
+  const fcPort = config.filmcraftPort || Number(process.env.FILMCRAFT_PORT) || 9876;
+  const pproHost = config.premiereHost || process.env.PREMIERE_HOST || "127.0.0.1";
+  const pproPort = config.premierePort || Number(process.env.PREMIERE_PORT) || 9877;
   const pack = config.pack || (process.env.VIBIE_PACK as ToolPackName) || "full";
+  const target = config.target || (process.env.VIBIE_TARGET as NleHost) || "auto";
 
-  const client = new FilmCraftClient(host, port);
+  const bridge = new UnifiedBridge(fcHost, fcPort, pproHost, pproPort);
+  bridge.setPreferredTarget(target);
 
   const server = new McpServer(
     {
@@ -43,20 +50,20 @@ export function createVibieServer(config: ServerConfig = {}): {
   );
 
   // Register all modular domain tools
-  registerInspectionTools(server, client, pack);
-  registerProjectTools(server, client, pack);
-  registerTimelineTools(server, client, pack);
-  registerAudioTools(server, client, pack);
-  registerColorTools(server, client, pack);
-  registerVisionTools(server, client, pack);
-  registerGraphicsTools(server, client, pack);
-  registerExportTools(server, client, pack);
+  registerInspectionTools(server, bridge, pack);
+  registerProjectTools(server, bridge, pack);
+  registerTimelineTools(server, bridge, pack);
+  registerAudioTools(server, bridge, pack);
+  registerColorTools(server, bridge, pack);
+  registerVisionTools(server, bridge, pack);
+  registerGraphicsTools(server, bridge, pack);
+  registerExportTools(server, bridge, pack);
 
   // Register live context resources
-  registerLiveResources(server, client);
+  registerLiveResources(server, bridge);
 
   // Register guided workflow prompts
   registerWorkflowPrompts(server);
 
-  return { server, client };
+  return { server, bridge };
 }
