@@ -19,12 +19,20 @@ export function registerProjectTools(
       },
       async ({ filePaths, binName }) => {
         try {
-          const result = await client.executeCommand("project.import", {
-            paths: filePaths,
-            bin: binName,
-          });
+          let result: unknown;
+          try {
+            result = await client.executeCommand("file.import", {
+              paths: filePaths,
+              bin: binName,
+            });
+          } catch {
+            result = await client.executeCommand("project.import", {
+              paths: filePaths,
+              bin: binName,
+            });
+          }
           const receipt = ReceiptManager.createReceipt(
-            "project.import",
+            "file.import",
             { filePaths, binName, result },
             `Successfully imported ${filePaths.length} media file(s) into bin '${binName || "Root"}'`
           );
@@ -57,12 +65,20 @@ export function registerProjectTools(
       },
       async ({ name, parentBinId }) => {
         try {
-          const result = await client.executeCommand("project.createBin", {
-            name,
-            parent: parentBinId,
-          });
+          let result: unknown;
+          try {
+            result = await client.executeCommand("file.newBin", {
+              name,
+              parent: parentBinId,
+            });
+          } catch {
+            result = await client.executeCommand("project.createBin", {
+              name,
+              parent: parentBinId,
+            });
+          }
           const receipt = ReceiptManager.createReceipt(
-            "project.createBin",
+            "file.newBin",
             { name, parentBinId, result },
             `Created project bin '${name}'`
           );
@@ -73,6 +89,64 @@ export function registerProjectTools(
           const msg = err instanceof Error ? err.message : String(err);
           return {
             content: [{ type: "text", text: `Error creating bin: ${msg}` }],
+            isError: true,
+          };
+        }
+      }
+    );
+  }
+
+  if (isToolInPack("filmcraft_new_project", activePack)) {
+    server.tool(
+      "filmcraft_new_project",
+      "Creates a new blank project in FilmCraft or Premiere Pro with the given name.",
+      {
+        name: z.string().describe("Project name"),
+      },
+      async ({ name }) => {
+        try {
+          let result: unknown;
+          try {
+            result = await client.executeCommand("file.newProject", { name });
+          } catch {
+            result = await client.executeCommand("project.new", { name });
+          }
+          return {
+            content: [{ type: "text", text: JSON.stringify({ status: "success", projectName: name, result }, null, 2) }],
+          };
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          return {
+            content: [{ type: "text", text: `Error creating new project: ${msg}` }],
+            isError: true,
+          };
+        }
+      }
+    );
+  }
+
+  if (isToolInPack("filmcraft_save_project", activePack)) {
+    server.tool(
+      "filmcraft_save_project",
+      "Saves the active FilmCraft or Premiere Pro project to disk.",
+      {
+        path: z.string().optional().describe("Optional destination file path for Save As"),
+      },
+      async ({ path: savePath }) => {
+        try {
+          let result: unknown;
+          if (savePath) {
+            result = await client.executeCommand("file.saveAs", { path: savePath });
+          } else {
+            result = await client.executeCommand("file.save", {});
+          }
+          return {
+            content: [{ type: "text", text: JSON.stringify({ status: "success", path: savePath, result }, null, 2) }],
+          };
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          return {
+            content: [{ type: "text", text: `Error saving project: ${msg}` }],
             isError: true,
           };
         }

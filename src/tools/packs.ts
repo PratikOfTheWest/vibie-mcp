@@ -19,6 +19,8 @@ export const PACK_TOOLS: Record<ToolPackName, string[]> = {
   editorial: [
     "filmcraft_inspect_timeline",
     "filmcraft_inspect_project",
+    "filmcraft_new_project",
+    "filmcraft_save_project",
     "filmcraft_import_media",
     "filmcraft_create_bin",
     "filmcraft_place_clip",
@@ -56,6 +58,8 @@ export const PACK_TOOLS: Record<ToolPackName, string[]> = {
   full: [
     "filmcraft_inspect_timeline",
     "filmcraft_inspect_project",
+    "filmcraft_new_project",
+    "filmcraft_save_project",
     "filmcraft_import_media",
     "filmcraft_create_bin",
     "filmcraft_place_clip",
